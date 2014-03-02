@@ -5,8 +5,8 @@
 TEMPLATE = app
 TARGET = go
 INCLUDEPATH += .
-QT += widgets
+QT += widgets gui
 
 # Input
-HEADERS += MainWindow.h
-SOURCES += main.cpp MainWindow.cpp
+HEADERS += MainWindow.h FieldDraw.h
+SOURCES += main.cpp MainWindow.cpp FieldDraw.cpp

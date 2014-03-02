@@ -1,15 +1,17 @@
 #include "MainWindow.h"
-#include <QPushButton>
-#include <QBoxLayout>
-#include <QPixmap>
+#include <QPainter>
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 {
 	//QMainWindow::SetWindowTitle("Example");
-	resize(500, 50);
+	resize(500, 250);
+	paint = new FieldDraw(this);
+	paint->resize(500, 227);
 
+	//painter->drawText(new QPointF(0,0), new QString("Hello, World!"));
 	//moveWindowCenter();
 
+	/*
 	QWidget* wgt = new QWidget();
 	QPushButton* cmdA = new QPushButton("A");
 	QPushButton* cmdB = new QPushButton("B");
@@ -25,9 +27,10 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 	QPixmap *pixmap = new QPixmap();
 	layout->addWidget(pixmap,2);
 	wgt1->setLayout(layout);
+	*/
+	//setCentralWidget(paint);
 
-	setCentralWidget(wgt1);
-
-	this->setVisible(false);
-	this->setVisible(true);
+	//this->setVisible(false);
+	//this->setVisible(true);
 }
+

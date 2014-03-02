@@ -1,7 +1,8 @@
-#ifndef __CORE_H__
-#define __CORE_H__
+#ifndef __MAIN_WINDOW__
+#define __MAIN_WINDOW__
 
 #include <QMainWindow>
+#include "FieldDraw.h"
 
 class MainWindow: public QMainWindow
 {
@@ -9,12 +10,12 @@ class MainWindow: public QMainWindow
 
 	public:
 		MainWindow(QWidget *parent = 0);
-
 	private:
+		FieldDraw *paint;
 		//QWidget *wgt;
 		//QPushButton *button1;
 		//QPushButton *button2;
 		
 };
 
-#endif // __CORE_H__
+#endif // __MAIN_WINDOW__
