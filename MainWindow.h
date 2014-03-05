@@ -3,6 +3,14 @@
 
 #include <QMainWindow>
 #include "FieldDraw.h"
+#include <QTextEdit>
+#include <QTcpServer>
+#include <QTcpSocket>
+#include <QPushButton>
+
+class QTextEdit;
+class QTcpServer;
+class QTcpSocket;
 
 class MainWindow: public QMainWindow
 {
@@ -12,10 +20,26 @@ class MainWindow: public QMainWindow
 		MainWindow(QWidget *parent = 0);
 	private:
 		FieldDraw *paint;
-		//QWidget *wgt;
-		//QPushButton *button1;
-		//QPushButton *button2;
+		QTextEdit * txt;
+		QTcpServer * server;
+		QTcpSocket * socket;
+		quint16	next_block_size;
+
+		void sendToClient(QTcpSocket* socket, const QString& str);
+	public slots:
+		void slotNewConnection();
+		void slotReadClient();
+
+		void SendPoints(QPoint&);
 		
+	private slots:
+		void slotReadyRead();
+		void slotError(QAbstractSocket::SocketError);
+		void slotSendToServer();
+		void slotConnected();
+
+		void GoConnectClient();
+		void GoConnectServer();
 };
 
 #endif // __MAIN_WINDOW__

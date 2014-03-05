@@ -5,7 +5,7 @@
 TEMPLATE = app
 TARGET = go
 INCLUDEPATH += .
-QT += widgets gui
+QT += widgets gui network
 
 # Input
 HEADERS += MainWindow.h FieldDraw.h

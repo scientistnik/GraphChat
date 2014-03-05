@@ -8,6 +8,10 @@ class FieldDraw : public QWidget
 {
 	Q_OBJECT
 
+	signals:
+		void sendPoints(QPoint&);
+	public slots:
+		void slotAddPoint(QPoint);
 	public:
 		FieldDraw(QWidget* parent = 0);
 		void paintEvent(QPaintEvent*);
