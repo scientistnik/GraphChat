@@ -8,5 +8,5 @@ INCLUDEPATH += .
 QT += widgets gui network
 
 # Input
-HEADERS += MainWindow.h FieldDraw.h
-SOURCES += main.cpp MainWindow.cpp FieldDraw.cpp
+HEADERS += MainWindow.h FieldDraw.h NetWork.h
+SOURCES += main.cpp MainWindow.cpp FieldDraw.cpp NetWork.cpp

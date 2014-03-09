@@ -1,16 +1,13 @@
 #include "MainWindow.h"
 #include <QWidget>
 #include <QPainter>
-//#include <QTextEdit>
-#include <QVBoxLayout>
-//#include <QPushButton>
-#include <QMessageBox>
-#include <QDataStream>
-#include <QTime>
-//#include <QTextLine>
 #include <QMenuBar>
 #include <QMenu>
-
+#include <QDialog>
+#include <QLineEdit>
+#include <QLabel>
+#include <QGridLayout>
+#include <QMessageBox>
 
 #define SIZE_Y	500
 #define SIZE_X	600
@@ -20,10 +17,14 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 	setFixedHeight(SIZE_Y);
 	setFixedWidth(SIZE_X);
 
-	paint = new FieldDraw;//(wdt);
+	paint = new FieldDraw(this);
 	paint->setAutoFillBackground(true);
 
-	connect(paint, SIGNAL(sendPoints(QPoint&)), this, SLOT(SendPoints(QPoint& )));
+	net = new NetWork;
+	connect(net, SIGNAL(sentMessage(const QString&)),this, SLOT(txtMessage(const QString&)));
+
+	connect(net, SIGNAL(drawPoint(QPoint&)), paint, SLOT(slotAddPoint(QPoint&)));
+	connect(paint, SIGNAL(sendPoints(QPoint&)), net, SLOT(SendPoints(QPoint& )));
 
 	txt = new QTextEdit(paint);
 	txt->setReadOnly(true);
@@ -35,171 +36,95 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 	QMenu * menu_exit = new QMenu("&Menu");
 	menu_exit->addAction("&EXIT");
 	connect(menu_exit, SIGNAL(triggered(QAction*)), SLOT(close()));
+
 	QMenu * menu_server = new QMenu("&Server");
 	menu_server->addAction("&Create");
-	connect(menu_server, SIGNAL(triggered(QAction*)),SLOT(GoConnectServer()));
+	connect(menu_server, SIGNAL(triggered(QAction*)), this, SLOT(serverDialog()));
+	connect(this, SIGNAL(createServer(QString, int)), net,SLOT(CreateServer(QString, int)));
+
 	QMenu * menu_client = new QMenu("&Client");
 	menu_client->addAction("&Connected");
-	connect(menu_client, SIGNAL(triggered(QAction*)),SLOT(GoConnectClient()));
+	connect(menu_client, SIGNAL(triggered(QAction*)), this,SLOT(clientDialog()));
+	connect(this, SIGNAL(createClient(QString, QString, int)), net,SLOT(CreateClient(QString, QString, int)));
+
 	menu->addMenu(menu_exit);
 	menu->addMenu(menu_server);
 	menu->addMenu(menu_client);
 
-	setCentralWidget(paint/*central*/);
+	setCentralWidget(paint);
 	setMenuBar(menu);
 	//this->setVisible(false);
 	//this->setVisible(true);
 }
 
-void MainWindow::slotNewConnection()
+MainWindow::~MainWindow()
 {
-	QTcpSocket * client_socket = server->nextPendingConnection();
-
-	connect(client_socket, SIGNAL(disconnected()), client_socket, SLOT(deleteLater()));
-	connect(client_socket, SIGNAL(readyRead()), this,					 SLOT(slotReadClient()));
-	sendToClient(client_socket, "Server Response: Connected!");
+	delete net;
 }
 
-void MainWindow::slotReadClient()
+void MainWindow::txtMessage(const QString& str)
 {
-	txt->append("slotReadClient");
-	QTcpSocket * client_socket = (QTcpSocket *)sender();
-	QDataStream in(client_socket);
-	in.setVersion(QDataStream::Qt_5_2);
-	
-	for(;;)
+	txt->append(str);
+}
+
+void MainWindow::serverDialog()
+{
+	QDialog * dialog = new QDialog(this);
+	QLineEdit * name = new QLineEdit;
+	QLineEdit * port = new QLineEdit;
+	QPushButton * ok = new QPushButton("&Ok");
+	QPushButton * cancel = new QPushButton("&Cancel");
+	QLabel * txt_name = new QLabel("&Name");
+	QLabel * txt_port = new QLabel("&Port");
+	QGridLayout * dialog_lay = new QGridLayout;
+
+	connect(ok, SIGNAL(clicked()), dialog, SLOT(accept()));
+	connect(cancel, SIGNAL(clicked()), dialog, SLOT(reject()));
+
+	dialog_lay->addWidget(txt_name, 0,0);
+	dialog_lay->addWidget(txt_port, 1,0);
+	dialog_lay->addWidget(name, 0,1);
+	dialog_lay->addWidget(port, 1,1);
+	dialog_lay->addWidget(ok,2,0);
+	dialog_lay->addWidget(cancel,2,1);
+	dialog->setLayout(dialog_lay);
+
+	if(dialog->exec() == QDialog::Accepted)
 	{
-		if(!next_block_size) 
-		{
-			/*
-			if (client_socket->bytesAvailable() < sizeof(quint16))
-			{
-				break;
-			}
-			*/
-			in >> next_block_size;
-		}
-
-		if (client_socket->bytesAvailable() < next_block_size)
-		{
-			break;
-		}
-		QTime time;
-		QString str;
-		in >> time >> str;
-
-		QString strMessage = time.toString() + " " + "Client has set - " + str;
-		txt->append(strMessage);
-		next_block_size = 0;
-
-		sendToClient(client_socket, "Server Response: Received\"" + str + "\"");
+		emit createServer(name->text(), port->text().toInt());
 	}
+	delete dialog;
 }
 
-void MainWindow::sendToClient(QTcpSocket * socket, const QString& str)
+void MainWindow::clientDialog()
 {
-	QByteArray block;
-	QDataStream out(&block,QIODevice::WriteOnly);
-	out.setVersion(QDataStream::Qt_5_2);
-	out << quint16(0) << QTime::currentTime() << str;
+	QDialog * dialog = new QDialog(this);
+	QLineEdit * name = new QLineEdit;
+	QLineEdit * ip = new QLineEdit;
+	QLineEdit * port = new QLineEdit;
+	QPushButton * ok = new QPushButton("&Ok");
+	QPushButton * cancel = new QPushButton("&Cancel");
+	QLabel * txt_name = new QLabel("&Name");
+	QLabel * txt_ip = new QLabel("&IP");
+	QLabel * txt_port = new QLabel("&Port");
+	QGridLayout * dialog_lay = new QGridLayout;
 
-	out.device()->seek(0);
-	out << quint16(block.size() - sizeof(quint16));
+	connect(ok, SIGNAL(clicked()), dialog, SLOT(accept()));
+	connect(cancel, SIGNAL(clicked()), dialog, SLOT(reject()));
 
-	socket->write(block);
-}
+	dialog_lay->addWidget(txt_name, 0,0);
+	dialog_lay->addWidget(txt_ip, 1,0);
+	dialog_lay->addWidget(txt_port, 2,0);
+	dialog_lay->addWidget(name, 0,1);
+	dialog_lay->addWidget(ip, 1,1);
+	dialog_lay->addWidget(port, 2,1);
+	dialog_lay->addWidget(ok,3,0);
+	dialog_lay->addWidget(cancel,3,1);
+	dialog->setLayout(dialog_lay);
 
-void MainWindow::slotReadyRead()
-{
-	txt->append("slotReadyRead");
-	QDataStream in(socket);
-	in.setVersion(QDataStream::Qt_5_2);
-	for (;;)
+	if(dialog->exec() == QDialog::Accepted)
 	{
-		if (!next_block_size)
-		{
-			/*
-			if (socket->bytesAvailable() < sizeof(quint16))
-			{
-				break;
-			}
-			*/
-			in >> next_block_size;
-		}
-		if (socket->bytesAvailable() < next_block_size)
-		{
-			break;
-		}
-		QTime time;
-		QString str;
-		in >> time >> str;
-
-		txt->append(time.toString() + " " + str);
-		next_block_size = 0;
+		emit createClient(name->text(),ip->text(), port->text().toInt());
 	}
-}
-
-void MainWindow::slotError(QAbstractSocket::SocketError)
-{
-	QString strError = 
-					"Error: ";
-	txt->append(strError);
-}
-
-void MainWindow::slotSendToServer()
-{
-	txt->append("slotSendToServer");
-	QByteArray block;
-	QDataStream out(&block, QIODevice::WriteOnly);
-
-	out.setVersion(QDataStream::Qt_5_2);
-	out << quint16(0) << QTime::currentTime();
-
-	out.device()->seek(0);
-	out << quint16(block.size() - sizeof(quint16));
-
-	socket->write(block);
-}
-
-void MainWindow::slotConnected()
-{
-	txt->append("Received the connected() signal");
-}
-
-void MainWindow::GoConnectClient()
-{
-	socket = new QTcpSocket(this);
-	socket->connectToHost("localhost", 2323);
-	connect(socket, SIGNAL(connected()), SLOT(slotConnected()));
-	connect(socket, SIGNAL(readyRead()), SLOT(slotReadyRead()));
-	connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), this,
-					SLOT(slotError(QAbstractSocket::SocketError))
-					);
-	//connect(menu_client, SIGNAL(triggered(QAction*)), SLOT(slotSendToServer()));
-	//connect(cmd, SIGNAL(cliced()), SLOT(slotSendToServer()));
-	//slotSendToServer();
-	txt->append("Client on...");
-}
-
-void MainWindow::GoConnectServer()
-{
-	server = new QTcpServer(this);
-
-	if( !server->listen(QHostAddress::Any, 2323)) 
-	{
-		QMessageBox::critical(0, "Server Error", 
-													"Unable to start the server:",
-													server->errorString()
-													);
-		server->close();
-		return;
-	}
-	connect(server, SIGNAL(newConnection()), SLOT(slotNewConnection()));
-	txt->append("Server on...");
-}
-
-void MainWindow::SendPoints(QPoint&)
-{
-	txt->append("heeelo");
-	slotSendToServer();
+	delete dialog;
 }

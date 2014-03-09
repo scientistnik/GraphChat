@@ -11,7 +11,7 @@ class FieldDraw : public QWidget
 	signals:
 		void sendPoints(QPoint&);
 	public slots:
-		void slotAddPoint(QPoint);
+		void slotAddPoint(QPoint&);
 	public:
 		FieldDraw(QWidget* parent = 0);
 		void paintEvent(QPaintEvent*);
@@ -21,6 +21,7 @@ class FieldDraw : public QWidget
 		void mouseMoveEvent(QMouseEvent* pe);
 	private:
 		QVector<QPoint> points;
+		QVector<QPoint> net_points;
 		bool push_mouse;
 };
 

@@ -9,15 +9,15 @@ FieldDraw::FieldDraw(QWidget* parent) : QWidget(parent)
 	QPalette pall;
 	pall.setColor(this->backgroundRole(),Qt::white);
 	setPalette(pall);
-	//setAutoFillBackground(true);
 }
 
 void FieldDraw::paintEvent(QPaintEvent*)
 {
 	QPainter paint(this);
-	//paint.drawText(10,10,"Hello");
 	paint.setPen(Qt::blue);
 	paint.drawLines(points);
+	paint.setPen(Qt::red);
+	paint.drawLines(net_points);
 }
 
 void FieldDraw::mousePressEvent(QMouseEvent* pe)
@@ -35,12 +35,19 @@ void FieldDraw::mouseReleaseEvent(QMouseEvent*)
 void FieldDraw::mouseMoveEvent(QMouseEvent* pe)
 {
 	QPoint p(pe->x(), pe->y());
-	if( push_mouse ) points << p;//QPoint(pe->x(), pe->y());
-	points << p;//QPoint(pe->x(), pe->y());
+	if( push_mouse ) 
+	{
+		points << p;
+		emit sendPoints(p);
+	}
+	points << p;
 	emit sendPoints(p);
 	update();
 }
 
-void FieldDraw::slotAddPoint(QPoint)
+void FieldDraw::slotAddPoint(QPoint& p)
 {
+	if (!net_points.empty()) net_points << p;
+	net_points << p;
+	update();
 }
