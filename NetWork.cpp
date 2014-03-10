@@ -154,7 +154,7 @@ void NetWork::receiveData(QTcpSocket * socket)
 		buffer_block.crc += buf[0]<<8;
 		//emit sentMessage("dec:"+QString::number(buffer_block.crc));
 
-		if(buffer_block.crc != qChecksum(buffer_block.data, buffer_block.length_data)||(0))
+		if(buffer_block.crc != qChecksum(buffer_block.data, buffer_block.length_data)&&(0))
 			continue;
 		else
 		{
