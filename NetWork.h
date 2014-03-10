@@ -18,11 +18,15 @@ class NetWork : public QObject
 
 public:
 	NetWork();
+	QList<quint8> getBlackList();
 
 private:
 	QTcpSocket * socket;
 	QTcpServer * server;
 	QMap<int,QTcpSocket *> map_clients;
+	QMap<int,QString> clients_name;
+	quint8 my_number;
+	QList<quint8> black_list;
 
 	quint16	next_block_size;
 	NetMessage_t buffer_block;
@@ -34,10 +38,12 @@ private:
 	QByteArray DecodePack(const QByteArray&);
 	void sendData(const QByteArray&);
 	void receiveData(QTcpSocket *);
+	void updateList();
 
 signals:
 	void sentMessage(const QString&);
 	void drawPoint(QPoint&);
+	void clearMessage();
 
 public slots:
 	void SendPoints(QPoint&);
@@ -46,6 +52,7 @@ public slots:
 
 	void CreateServer(QString, int);
 	void CreateClient(QString, QString, int);
+	void addBlackList(quint8);
 
 private slots:
 	void clientReadData();

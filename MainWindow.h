@@ -29,9 +29,13 @@ class MainWindow: public QMainWindow
 	signals:
 		void createServer(QString, int);
 		void createClient(QString, QString, int);
+		void blackList(quint8);
 
 	public slots:
-		void txtMessage(const QString&);
+		//void txtMessage(const QString&);
+		//void txtClear();
+		void menuExit();
+		void menuBlackList();
 		void serverDialog();
 		void clientDialog();
 };
